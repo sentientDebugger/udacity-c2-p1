@@ -1,5 +1,6 @@
 import fs from 'fs';
 import Jimp = require('jimp');
+import { URL, parse as parseUrl } from 'url';
 
 // filterImageFromURL
 // helper function to download, filter, and save the filtered image locally
@@ -8,17 +9,22 @@ import Jimp = require('jimp');
 //    inputURL: string - a publicly accessible url to an image file
 // RETURNS
 //    an absolute path to a filtered image locally saved file
-export async function filterImageFromURL(inputURL: string): Promise<string>{
+export function filterImageFromURL(inputURL: string): Promise<string>{
     return new Promise( async resolve => {
         const photo = await Jimp.read(inputURL);
-        const outpath = '/tmp/filtered.'+Math.floor(Math.random() * 2000)+'.jpg';
+        // improvement: maybe use a uuid?
+        const outpath = '/tmp/filtered.' + Math.floor(Math.random() * 2000) + '.jpg';
+        /**
+         * @var fqImgPath The fully qualified path to the image.
+         */
+        const fqImgPath = __dirname + outpath;
         await photo
-        .resize(256, 256) // resize
-        .quality(60) // set JPEG quality
-        .greyscale() // set greyscale
-        .write(__dirname+outpath, (img)=>{
-            resolve(__dirname+outpath);
-        });
+            .resize(256, 256) // resize
+            .quality(60) // set JPEG quality
+            .greyscale() // set greyscale
+            .write(fqImgPath, img => {
+                resolve(fqImgPath);
+            });
     });
 }
 
@@ -30,5 +36,27 @@ export async function filterImageFromURL(inputURL: string): Promise<string>{
 export async function deleteLocalFiles(files:Array<string>){
     for( let file of files) {
         fs.unlinkSync(file);
+    }
+}
+
+/**
+ * @return true if:
+ *   - the given string is a valid http(s) url
+ *   - the path ends in png|jpg|jpeg|bmp|tiff|gif
+ */
+export function isValidImgUrl(str: string): boolean {
+    if (!str) {
+        return false;
+    }
+    try {
+        // following line should throw an error if str is invalid
+        new URL(str);
+        const parsed = parseUrl(str);
+        if(!['http:', 'https:'].includes(parsed.protocol)) {
+            return false;
+        }
+        return parsed.pathname.match(/\.(png|jpg|jpeg|bmp|tiff|gif)$/i) !== null;
+    } catch (err) {
+        return false;
     }
 }

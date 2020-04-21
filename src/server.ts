@@ -1,6 +1,6 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import { filterImageFromURL, deleteLocalFiles, isValidImgUrl } from './util/util';
 
 (async () => {
 
@@ -9,6 +9,8 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   // Set the network port
   const port = process.env.PORT || 8082;
+
+  const isDev = process.env.ISDEV == '1';
   
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
@@ -27,7 +29,29 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   // RETURNS
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
-  /**************************************************************************** */
+app.get( "/filteredimage", async ( req: Request, res: Response ) => {
+	let { image_url } = req.query;
+
+	if (typeof image_url !== 'string' || !isValidImgUrl(image_url)) {
+		return res.status(400)
+			.send(`image_url is required and must be valid (png|jpg|jpeg|bmp|tiff|gif)`);
+	}
+
+	let path: string;
+	try {
+		path = await filterImageFromURL(image_url);
+	} catch (err) {
+		return res.status(500)
+			.send(isDev ? err : 'An error occured while processing the image.');
+	}
+
+	res.status(200)
+		.sendFile(path, function(err) {
+      if (!err) {
+        deleteLocalFiles([path]);
+      }
+    });
+} );
 
   //! END @TODO1
   
