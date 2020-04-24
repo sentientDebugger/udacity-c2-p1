@@ -1,5 +1,5 @@
 import fs from 'fs';
-import Jimp = require('jimp');
+import Jimp from 'jimp';
 import { URL, parse as parseUrl } from 'url';
 
 // filterImageFromURL
