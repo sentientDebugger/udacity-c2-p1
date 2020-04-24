@@ -10,21 +10,25 @@ import { URL, parse as parseUrl } from 'url';
 // RETURNS
 //    an absolute path to a filtered image locally saved file
 export function filterImageFromURL(inputURL: string): Promise<string>{
-    return new Promise( async resolve => {
-        const photo = await Jimp.read(inputURL);
-        // improvement: maybe use a uuid?
-        const outpath = '/tmp/filtered.' + Math.floor(Math.random() * 2000) + '.jpg';
-        /**
-         * @var fqImgPath The fully qualified path to the image.
-         */
-        const fqImgPath = __dirname + outpath;
-        await photo
-            .resize(256, 256) // resize
-            .quality(60) // set JPEG quality
-            .greyscale() // set greyscale
-            .write(fqImgPath, img => {
-                resolve(fqImgPath);
-            });
+    return new Promise( async (resolve, reject) => {
+        try {
+            const photo = await Jimp.read(inputURL);
+            // improvement: maybe use a uuid?
+            const outpath = '/tmp/filtered.' + Math.floor(Math.random() * 2000) + '.jpg';
+            /**
+             * @var fqImgPath The fully qualified path to the image.
+             */
+            const fqImgPath = __dirname + outpath;
+            await photo
+                .resize(256, 256) // resize
+                .quality(60) // set JPEG quality
+                .greyscale() // set greyscale
+                .write(fqImgPath, img => {
+                    resolve(fqImgPath);
+                });
+        } catch (err) {
+            reject(err);
+        }
     });
 }
 
