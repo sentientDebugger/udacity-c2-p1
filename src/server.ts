@@ -42,7 +42,7 @@ app.get( "/filteredimage", async ( req: Request, res: Response ) => {
 		path = await filterImageFromURL(image_url);
 	} catch (err) {
 		return res.status(500)
-			.send(isDev ? err : 'An error occured while processing the image.');
+			.send(isDev ? err : 'An error occured while processing the image, please verify that it is valid.');
 	}
 
 	res.status(200)
